@@ -2,17 +2,19 @@
 
 import { useState } from "react"
 import { useSession, signOut } from "next-auth/react"
-import { LogOut, User, Upload, FileText, Zap, Shield } from "lucide-react"
+import { LogOut, User, FileText, Zap, Shield } from "lucide-react"
 import UploadComponent from "@/components/UploadComponent"
 import ResumeList from "@/components/ResumeList"
 import Link from "next/link"
 
 export default function Home() {
-  const { data: session, status } = useSession()
+  const { data: session, status, update: updateSession } = useSession()
   const [refreshKey, setRefreshKey] = useState(0)
 
   const handleUploadComplete = () => {
     setRefreshKey((prev) => prev + 1)
+    // Update the session to refresh credits in real-time
+    updateSession()
   }
 
   if (status === "loading") {
@@ -165,7 +167,7 @@ export default function Home() {
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-gray-600">Credits:</span>
                 <span className="font-semibold text-blue-600">
-                  {(session.user as any)?.credits || 0}
+                  {session.user?.credits || 0}
                 </span>
               </div>
 

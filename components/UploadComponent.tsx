@@ -9,7 +9,7 @@ export default function UploadComponent({ onUploadComplete }: { onUploadComplete
   const [isUploading, setIsUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { data: session } = useSession()
+  const { data: session, update: updateSession } = useSession()
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -63,10 +63,12 @@ export default function UploadComponent({ onUploadComplete }: { onUploadComplete
       }
 
       toast.success("PDF uploaded and processed successfully!", { id: uploadToast })
+      // Update session to refresh credits in real-time
+      await updateSession()
       onUploadComplete()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Upload error:", error)
-      toast.error(error.message || "Failed to upload PDF", { id: uploadToast })
+      toast.error(error instanceof Error ? error.message : "Failed to upload PDF", { id: uploadToast })
     } finally {
       setIsUploading(false)
       if (fileInputRef.current) {
@@ -75,7 +77,7 @@ export default function UploadComponent({ onUploadComplete }: { onUploadComplete
     }
   }
 
-  const credits = (session?.user as any)?.credits || 0
+  const credits = session?.user?.credits || 0
   const hasEnoughCredits = credits >= 100
 
   return (
@@ -133,7 +135,7 @@ export default function UploadComponent({ onUploadComplete }: { onUploadComplete
       {!hasEnoughCredits && (
         <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm text-yellow-800">
-            ⚠️ You don't have enough credits (need 100, have {credits}). 
+            ⚠️ You don&apos;t have enough credits (need 100, have {credits}). 
             <a href="/settings" className="ml-1 font-medium text-blue-600 hover:text-blue-700 underline">
               Upgrade your plan
             </a>
