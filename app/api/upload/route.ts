@@ -58,17 +58,24 @@ export async function POST(request: NextRequest) {
     // Deduct credits after successful extraction
     await deductCredits(user.id, 100)
 
+    // Get updated user credits
+    const updatedUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { credits: true }
+    })
+
     // Save to database
     const upload = await prisma.resumeHistory.create({
       data: {
         userId: user.id,
         fileName: file.name,
-        resumeData: resumeData as any,
+        resumeData: JSON.parse(JSON.stringify(resumeData)),
       },
     })
 
     return NextResponse.json({
       success: true,
+      newCredits: updatedUser?.credits || 0,
       upload: {
         id: upload.id,
         fileName: upload.fileName,
@@ -76,10 +83,10 @@ export async function POST(request: NextRequest) {
         resumeData,
       },
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Upload error:", error)
     return NextResponse.json(
-      { error: error.message || "Failed to process PDF" },
+      { error: error instanceof Error ? error.message : "Failed to process PDF" },
       { status: 500 }
     )
   }

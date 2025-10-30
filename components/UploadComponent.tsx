@@ -5,11 +5,15 @@ import { useSession } from "next-auth/react"
 import toast from "react-hot-toast"
 import { Upload, Loader2 } from "lucide-react"
 
-export default function UploadComponent({ onUploadComplete }: { onUploadComplete: () => void }) {
+export default function UploadComponent({ onUploadComplete }: { onUploadComplete: (newCredits: number) => void }) {
   const [isUploading, setIsUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
+  const [localCredits, setLocalCredits] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { data: session, update: updateSession } = useSession()
+  const { data: session } = useSession()
+
+  // Use local credits if available, otherwise fall back to session credits
+  const displayCredits = localCredits !== null ? localCredits : (session?.user?.credits || 0)
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -63,9 +67,11 @@ export default function UploadComponent({ onUploadComplete }: { onUploadComplete
       }
 
       toast.success("PDF uploaded and processed successfully!", { id: uploadToast })
-      // Update session to refresh credits in real-time
-      await updateSession()
-      onUploadComplete()
+      
+      // Update local credits and notify parent
+      const newCredits = data.newCredits || (displayCredits - 100)
+      setLocalCredits(newCredits)
+      onUploadComplete(newCredits)
     } catch (error: unknown) {
       console.error("Upload error:", error)
       toast.error(error instanceof Error ? error.message : "Failed to upload PDF", { id: uploadToast })
@@ -77,8 +83,7 @@ export default function UploadComponent({ onUploadComplete }: { onUploadComplete
     }
   }
 
-  const credits = session?.user?.credits || 0
-  const hasEnoughCredits = credits >= 100
+  const hasEnoughCredits = displayCredits >= 100
 
   return (
     <div className="w-full">
@@ -87,7 +92,7 @@ export default function UploadComponent({ onUploadComplete }: { onUploadComplete
         <div className="flex items-center gap-2 text-sm">
           <span className="font-medium">Credits:</span>
           <span className={`font-bold ${hasEnoughCredits ? 'text-green-600' : 'text-red-600'}`}>
-            {credits}
+            {displayCredits}
           </span>
         </div>
       </div>
@@ -135,7 +140,7 @@ export default function UploadComponent({ onUploadComplete }: { onUploadComplete
       {!hasEnoughCredits && (
         <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-sm text-yellow-800">
-            ⚠️ You don&apos;t have enough credits (need 100, have {credits}). 
+            ⚠️ You don&apos;t have enough credits (need 100, have {displayCredits}). 
             <a href="/settings" className="ml-1 font-medium text-blue-600 hover:text-blue-700 underline">
               Upgrade your plan
             </a>

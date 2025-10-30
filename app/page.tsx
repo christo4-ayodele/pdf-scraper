@@ -8,13 +8,17 @@ import ResumeList from "@/components/ResumeList"
 import Link from "next/link"
 
 export default function Home() {
-  const { data: session, status, update: updateSession } = useSession()
+  const { data: session, status } = useSession()
   const [refreshKey, setRefreshKey] = useState(0)
+  const [localCredits, setLocalCredits] = useState<number | null>(null)
 
-  const handleUploadComplete = () => {
+  // Use local credits if available, otherwise fall back to session credits
+  const displayCredits = localCredits !== null ? localCredits : (session?.user?.credits || 0)
+
+  const handleUploadComplete = (newCredits: number) => {
     setRefreshKey((prev) => prev + 1)
-    // Update the session to refresh credits in real-time
-    updateSession()
+    // Update credits in real-time without page refresh
+    setLocalCredits(newCredits)
   }
 
   if (status === "loading") {
@@ -167,7 +171,7 @@ export default function Home() {
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-gray-600">Credits:</span>
                 <span className="font-semibold text-blue-600">
-                  {session.user?.credits || 0}
+                  {displayCredits}
                 </span>
               </div>
 
