@@ -1,27 +1,28 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { useSession, signOut } from "next-auth/react"
-import { LogOut, User, FileText, Zap, Shield } from "lucide-react"
-import UploadComponent from "@/components/UploadComponent"
-import ResumeList from "@/components/ResumeList"
-import Link from "next/link"
+import { useState } from 'react';
+import { useSession, signOut } from 'next-auth/react';
+import { LogOut, User, FileText, Zap, Shield } from 'lucide-react';
+import UploadComponent from '@/components/UploadComponent';
+import ResumeList from '@/components/ResumeList';
+import Link from 'next/link';
 
 export default function Home() {
-  const { data: session, status } = useSession()
-  const [refreshKey, setRefreshKey] = useState(0)
-  const [localCredits, setLocalCredits] = useState<number | null>(null)
+  const { data: session, status } = useSession();
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [localCredits, setLocalCredits] = useState<number | null>(null);
 
   // Use local credits if available, otherwise fall back to session credits
-  const displayCredits = localCredits !== null ? localCredits : (session?.user?.credits || 0)
+  const displayCredits =
+    localCredits !== null ? localCredits : session?.user?.credits || 0;
 
   const handleUploadComplete = (newCredits: number) => {
-    setRefreshKey((prev) => prev + 1)
+    setRefreshKey((prev) => prev + 1);
     // Update credits in real-time without page refresh
-    setLocalCredits(newCredits)
-  }
+    setLocalCredits(newCredits);
+  };
 
-  if (status === "loading") {
+  if (status === 'loading') {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -29,11 +30,11 @@ export default function Home() {
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!session) {
-  return (
+    return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         {/* Header */}
         <header className="bg-white border-b border-gray-200">
@@ -82,38 +83,53 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <Zap className="w-12 h-12 text-blue-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-2 text-black">AI-Powered</h3>
+              <h3 className="text-xl font-semibold mb-2 text-black">
+                AI-Powered
+              </h3>
               <p className="text-gray-600">
-                Uses OpenAI GPT-4o to extract structured data from resumes with high accuracy.
+                Uses OpenAI GPT-4o to extract structured data from resumes with
+                high accuracy.
               </p>
             </div>
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <FileText className="w-12 h-12 text-blue-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-2 text-black">Structured Output</h3>
+              <h3 className="text-xl font-semibold mb-2 text-black">
+                Structured Output
+              </h3>
               <p className="text-gray-600">
-                Gets profile, work experience, education, skills, and more in JSON format.
+                Gets profile, work experience, education, skills, and more in
+                JSON format.
               </p>
             </div>
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <Shield className="w-12 h-12 text-blue-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-2 text-black">Secure & Private</h3>
+              <h3 className="text-xl font-semibold mb-2 text-black">
+                Secure & Private
+              </h3>
               <p className="text-gray-600">
-                Your data is encrypted and stored securely. We never share your information.
+                Your data is encrypted and stored securely. We never share your
+                information.
               </p>
             </div>
           </div>
 
           {/* Preview of Upload Interface */}
           <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-            <h3 className="text-2xl font-semibold mb-4 text-black">How It Works</h3>
+            <h3 className="text-2xl font-semibold mb-4 text-black">
+              How It Works
+            </h3>
             <div className="space-y-4">
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">
                   1
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1 text-black">Upload Your PDF</h4>
-                  <p className="text-gray-600">Drag and drop your resume PDF file (up to 10MB)</p>
+                  <h4 className="font-semibold mb-1 text-black">
+                    Upload Your PDF
+                  </h4>
+                  <p className="text-gray-600">
+                    Drag and drop your resume PDF file (up to 10MB)
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -121,8 +137,13 @@ export default function Home() {
                   2
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1 text-black">AI Processing</h4>
-                  <p className="text-gray-600">Our AI extracts structured data using OpenAI in 10-30 seconds</p>
+                  <h4 className="font-semibold mb-1 text-black">
+                    AI Processing
+                  </h4>
+                  <p className="text-gray-600">
+                    Our AI extracts structured data using OpenAI in 10-30
+                    seconds
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -130,8 +151,13 @@ export default function Home() {
                   3
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-1 text-black">View Results</h4>
-                  <p className="text-gray-600">See your extracted resume data in a beautiful, organized format</p>
+                  <h4 className="font-semibold mb-1 text-black">
+                    View Results
+                  </h4>
+                  <p className="text-gray-600">
+                    See your extracted resume data in a beautiful, organized
+                    format
+                  </p>
                 </div>
               </div>
             </div>
@@ -151,24 +177,26 @@ export default function Home() {
           </div>
         </main>
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-gray-900">PDF Scraper</h1>
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                PDF Scraper
+              </h1>
+              <span className="hidden sm:inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs sm:text-sm font-medium truncate max-w-[150px] md:max-w-none">
                 {session.user?.email}
               </span>
             </div>
 
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4">
+              <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
                 <span className="text-gray-600">Credits:</span>
                 <span className="font-semibold text-blue-600">
                   {displayCredits}
@@ -177,18 +205,18 @@ export default function Home() {
 
               <Link
                 href="/settings"
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600 hover:text-gray-900"
               >
                 <User className="w-4 h-4" />
-                Settings
+                <span className="hidden sm:inline">Settings</span>
               </Link>
 
               <button
                 onClick={() => signOut()}
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600 hover:text-gray-900"
               >
                 <LogOut className="w-4 h-4" />
-                Sign Out
+                <span className="hidden sm:inline">Sign Out</span>
               </button>
             </div>
           </div>
@@ -206,5 +234,5 @@ export default function Home() {
         </div>
       </main>
     </div>
-  )
+  );
 }
