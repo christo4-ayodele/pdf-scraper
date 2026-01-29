@@ -7,8 +7,6 @@ import {
 import { openai } from '@/lib/openai';
 import { prisma } from '@/lib/prisma';
 
-export const runtime = 'edge';
-
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser();
