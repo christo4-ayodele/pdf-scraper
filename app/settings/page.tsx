@@ -20,6 +20,7 @@ export default function SettingsPage() {
   const [planType, setPlanType] = useState(
     (session?.user as any)?.planType || 'FREE'
   );
+  const [pollingForUpdate, setPollingForUpdate] = useState(false);
 
   // Update local state when session changes
   useEffect(() => {
@@ -29,6 +30,47 @@ export default function SettingsPage() {
     }
   }, [session]);
 
+  // Poll for updates after successful checkout
+  useEffect(() => {
+    if (!pollingForUpdate) return;
+
+    let pollCount = 0;
+    const maxPolls = 20; // Poll for up to 20 seconds
+    const pollInterval = 1000; // Poll every 1 second
+
+    const intervalId = setInterval(async () => {
+      pollCount++;
+      
+      // Update the session to get latest data
+      const updatedSession = await updateSession();
+      
+      if (updatedSession?.user) {
+        const updatedCredits = (updatedSession.user as any)?.credits || 0;
+        const updatedPlan = (updatedSession.user as any)?.planType || 'FREE';
+        
+        // Check if the plan has been updated
+        if (updatedPlan !== 'FREE' && updatedPlan !== planType) {
+          setCredits(updatedCredits);
+          setPlanType(updatedPlan);
+          setPollingForUpdate(false);
+          clearInterval(intervalId);
+          toast.success(
+            `Your account has been updated! You now have ${updatedCredits.toLocaleString()} credits.`
+          );
+          return;
+        }
+      }
+
+      // Stop polling after max attempts
+      if (pollCount >= maxPolls) {
+        setPollingForUpdate(false);
+        clearInterval(intervalId);
+      }
+    }, pollInterval);
+
+    return () => clearInterval(intervalId);
+  }, [pollingForUpdate, updateSession, planType]);
+
   // Handle success/cancel from Stripe redirect
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -36,41 +78,16 @@ export default function SettingsPage() {
       const plan = params.get('plan') || 'subscription';
       const sessionId = params.get('session_id');
 
-      // If we have a session_id, verify and add credits
-      if (sessionId) {
-        fetch(`/api/checkout?session_id=${sessionId}`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.success) {
-              toast.success(
-                `Successfully subscribed to ${plan} plan! Credits have been added.`
-              );
-              // Refresh NextAuth session to get updated credits
-              updateSession();
-              router.refresh();
-            } else {
-              toast.success(
-                `Successfully subscribed to ${plan} plan! Credits will be added shortly.`
-              );
-              updateSession();
-              router.refresh();
-            }
-          })
-          .catch((err) => {
-            console.error('Error verifying checkout:', err);
-            toast.success(
-              `Successfully subscribed to ${plan} plan! Credits will be added shortly.`
-            );
-            updateSession();
-            router.refresh();
-          });
-      } else {
-        toast.success(
-          `Successfully subscribed to ${plan} plan! Credits will be added shortly.`
-        );
-        updateSession();
-        router.refresh();
-      }
+      toast.success(
+        `Successfully subscribed to ${plan} plan! Updating your account...`
+      );
+
+      // Start polling for updates
+      setPollingForUpdate(true);
+
+      // Also trigger immediate update
+      updateSession();
+      router.refresh();
 
       // Clean URL
       window.history.replaceState({}, '', '/settings');
@@ -201,6 +218,14 @@ export default function SettingsPage() {
           <h2 className="text-xl font-semibold mb-4 text-gray-800">
             Current Status
           </h2>
+          {pollingForUpdate && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+              <span className="text-sm text-blue-800">
+                Updating your account with new credits...
+              </span>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-600 mb-1">Credits</p>

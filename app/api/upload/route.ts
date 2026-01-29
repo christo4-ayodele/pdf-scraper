@@ -86,6 +86,15 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: unknown) {
     console.error('Upload error:', error);
+
+    // If it's an image-based PDF error, return 400 so client can trigger OCR
+    if (
+      error instanceof Error &&
+      error.message.includes('Image-based PDFs require OCR')
+    ) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'Failed to process PDF',

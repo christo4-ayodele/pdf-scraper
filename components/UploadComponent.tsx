@@ -71,6 +71,39 @@ export default function UploadComponent({
               'Insufficient credits. Please upgrade your plan in Settings to continue.'
           );
         }
+        // If server indicates image-based PDF, convert on client and call OCR endpoint
+        const errMessage = String(data?.error || '').toLowerCase();
+        if (response.status === 400 && errMessage.includes('image-based')) {
+          toast.loading('Converting PDF to images for OCR...', {
+            id: uploadToast,
+          });
+          // Dynamically import pdfjs (client-only to avoid SSR issues)
+          const pdfjsLib = await import('pdfjs-dist');
+          // Use local worker from node_modules
+          pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+          const pages = await convertPDFToImages(file, pdfjsLib);
+
+          const extractRes = await fetch('/api/extract', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pages }),
+          });
+
+          if (!extractRes.ok) {
+            const err = await extractRes.json();
+            throw new Error(err.error || 'OCR extraction failed');
+          }
+
+          const extractData = await extractRes.json();
+          toast.success('OCR extraction successful!', { id: uploadToast });
+          const newCredits = extractData.newCredits || displayCredits - 100;
+          setLocalCredits(newCredits);
+          onUploadComplete(newCredits);
+          setIsUploading(false);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+          return; // Early return after OCR flow
+        }
+
         throw new Error(data.error || 'Upload failed');
       }
 
@@ -95,6 +128,35 @@ export default function UploadComponent({
       }
     }
   };
+
+  // Convert the pages of a PDF to base64 PNG images using pdfjs (client-side)
+  async function convertPDFToImages(
+    file: File,
+    pdfjsLib: typeof import('pdfjs-dist')
+  ): Promise<string[]> {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const maxPages = Math.min(pdf.numPages, 10);
+    const pages: string[] = [];
+
+    for (let i = 1; i <= maxPages; i++) {
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({ scale: 2 });
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      // Render page
+      // @ts-expect-error - pdfjs types are fine for this call in browser
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      const dataUrl = canvas.toDataURL('image/png');
+      pages.push(dataUrl);
+    }
+
+    return pages;
+  }
 
   const hasEnoughCredits = displayCredits >= 100;
 
