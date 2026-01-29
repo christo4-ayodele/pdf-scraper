@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     if (!hasCredits) {
       return NextResponse.json(
         { error: 'Insufficient credits' },
-        { status: 402 }
+        { status: 402 },
       );
     }
 
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     if (!pages || !Array.isArray(pages) || pages.length === 0) {
       return NextResponse.json(
         { error: 'No PDF pages provided' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
     console.error('OCR extraction error:', error);
     return NextResponse.json(
       { error: (error as Error).message || 'Extraction failed' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
