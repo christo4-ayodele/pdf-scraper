@@ -9,7 +9,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import Link from 'next/link';
 
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY || ''
+  process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY || '',
 );
 
 export default function SettingsPage() {
@@ -18,7 +18,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [credits, setCredits] = useState((session?.user as any)?.credits || 0);
   const [planType, setPlanType] = useState(
-    (session?.user as any)?.planType || 'FREE'
+    (session?.user as any)?.planType || 'FREE',
   );
   const [pollingForUpdate, setPollingForUpdate] = useState(false);
 
@@ -40,14 +40,14 @@ export default function SettingsPage() {
 
     const intervalId = setInterval(async () => {
       pollCount++;
-      
+
       // Update the session to get latest data
       const updatedSession = await updateSession();
-      
+
       if (updatedSession?.user) {
         const updatedCredits = (updatedSession.user as any)?.credits || 0;
         const updatedPlan = (updatedSession.user as any)?.planType || 'FREE';
-        
+
         // Check if the plan has been updated
         if (updatedPlan !== 'FREE' && updatedPlan !== planType) {
           setCredits(updatedCredits);
@@ -55,7 +55,7 @@ export default function SettingsPage() {
           setPollingForUpdate(false);
           clearInterval(intervalId);
           toast.success(
-            `Your account has been updated! You now have ${updatedCredits.toLocaleString()} credits.`
+            `Your account has been updated! You now have ${updatedCredits.toLocaleString()} credits.`,
           );
           return;
         }
@@ -79,7 +79,7 @@ export default function SettingsPage() {
       const sessionId = params.get('session_id');
 
       toast.success(
-        `Successfully subscribed to ${plan} plan! Updating your account...`
+        `Successfully subscribed to ${plan} plan! Updating your account...`,
       );
 
       // Start polling for updates
